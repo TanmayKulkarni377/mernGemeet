@@ -6,6 +6,9 @@ import { notFound, errorHandler } from './middleware/errorMiddleware.js';
 import connetDB from './config/db.js';
 const port = process.env.PORT || 5000;
 import userRoutes from './routes/userRoutes.js'
+import productRoutes from './routes/productRoutes.js'
+
+
 
 connetDB()
 
@@ -16,6 +19,9 @@ app.use(express.urlencoded({extended: true}))
 
 app.use(cookieParser())
 
+app.use('/api/products', productRoutes);
+
+// users api
 app.use('/api/users', userRoutes)
 
 app.get('/', (req, res) => res.send('server is ready'));

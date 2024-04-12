@@ -17,13 +17,15 @@ import RegisterScreen from "./screens/RegisterScreen.jsx";
 import ProfileScreen from "./screens/ProfileScreen.jsx";
 import PrivateRoute from "./components/PrivateRoute.jsx";
 import ShopScreen from "./screens/ShopScreen.jsx";
+import ProductScreen from "./screens/ProductScreen.jsx";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path="/" element={<App />}>
       <Route index={true} path="/" element={<ShopScreen />} />
-      <Route path="/login" element={<LoginScreen />} />
       <Route path="/homepage" element={<HomeScreen />} />
+      <Route path="/product/:id" element={<ProductScreen />} />
+      <Route path="/login" element={<LoginScreen />} />
       <Route path="/register" element={<RegisterScreen />} />
       {/* Private Routes   */}
       <Route path="" element={<PrivateRoute />}>
