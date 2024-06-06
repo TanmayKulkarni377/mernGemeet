@@ -1,151 +1,157 @@
-import asyncHandler from "express-async-handler";
-import User from "../models/userModel.js";
+import { sanitizeFilter } from "mongoose";
+import asyncHandler from "../middleware/asyncHandler.js";
+import User from "../models/shopuserModel.js";
 import generateToken from "../utils/generateToken.js";
 
-// @desc   Auth user/set token
-//route POST /api/users/auth
-// @access Public
+// #desc Auth user & get token
+// @route POST /api/users/login
+//@access Public
 const authUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
   const user = await User.findOne({ email });
 
-  if (user && (await user.matchPassword(password))) {
-    generateToken(res, user._id);
-    res.status(201).json({
+  if( user && (await user.matchPassword(password))) {
+
+    generateToken(res, user._id)
+
+    res.status(200).json({
       _id: user._id,
-      firstname: user.firstname,
-      lastname: user.lastname,
+      name: user.name,
       email: user.email,
-      billing_phone: user.billing_phone,
-      address_state: user.address_state,
-      city: user.city,
-      pincode: user.pinecode,
-      billing_address: user.billing_address,
-      shipping_address: user.shipping_address,
-    });
+      isAdmin: user.isAdmin
+    })
   } else {
     res.status(401);
     throw new Error("Invalid email or password");
   }
+
+
 });
 
-// @desc   Register a new user
-//route POST /api/users
-// @access Public
+// #desc Register User
+// @route POST /api/users
+//@access Public
 const registerUser = asyncHandler(async (req, res) => {
-  const { firstname, lastname, email, billing_phone, password, address_state, city, pincode, billing_address, shipping_address } = req.body;
+  const {name, email , password} = req.body;
+
   const userExists = await User.findOne({ email });
 
-  if (userExists) {
+  if(userExists) {
+
     res.status(400);
-    throw new Error("User already exists");
+    throw new Error('User already exits')
   }
 
-  const user = await User.create({
-    firstname,
-    lastname,
+  const user = await User.create({ 
+    name,
     email,
-    billing_phone,
-    password,
-    address_state,
-    city,
-    pincode,
-    billing_address,
-    shipping_address,
-  });
+    password
+  })
 
-  if (user) {
-    generateToken(res, user._id);
-    res.status(201).json({
+  if(user) {
+    generateToken(res, user._id)
+
+    res.status(200).json({
       _id: user._id,
-      firstname: user.firstname,
-      lastname: user.lastname,
+      name: user.name,
       email: user.email,
-      billing_phone: user.billing_phone,
-      address_state: user.address_state,
-      city: user.city,
-      pincode: user.pinecode,
-      billing_address: user.billing_address,
-      shipping_address: user.shipping_address,
-    });
+      isAdmin: user.isAdmin,
+    })
   } else {
     res.status(400);
     throw new Error("Invalid user data");
   }
+
 });
 
-// @desc   Logout user
-//route POST /api/users/logout
-// @access Public
+// #desc logout user / clear cookie
+// @route POST /api/users/logout
+//@access Private
 const logoutUser = asyncHandler(async (req, res) => {
-  res.cookie("jwt", "", {
+  res.cookie('jwt', '', {
     httpOnly: true,
-    expires: new Date(0),
-  });
+    expires: new Date(0) 
+  })
 
-  res.status(200).json({ message: "User Logged out" });
+  res.status(200).json({message: 'Logged out successfully'});
+
 });
 
-// @desc  Get user Profile
-//route GET /api/users/profile
-// @access Private
+// #desc get user profile
+// @route GET /api/users/profile
+//@access Private
 const getUserProfile = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user._id);
+  const user = await User.findById(req.user._id)
 
-  if (user) {
-    res.json({
+  if(user) {
+    res.status(200).json({
       _id: user._id,
-      firstname: user.firstname,
-      lastname: user.lastname,
+      name: user.name,
       email: user.email,
-      billing_phone: user.billing_phone,
-      address_state: user.address_state,
-      city: user.city,
-      pincode: user.pinecode,
-      billing_address: user.billing_address,
-      shipping_address: user.shipping_address,
-    });
+      isAdmin: user.isAdmin,
+    })
   } else {
     res.status(404);
-    throw new Error("User not found");
+    throw new Error('User not found')
   }
 });
 
-// @desc   Update user profile
-//route PUT /api/users/auth
-// @access Private
-const UpdateUserProfile = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user._id);
-
-  if (user) {
-    user.firstname = req.body.firstname || user.firstname;
-    user.lastname = req.body.lastname || user.lastname;
+// #desc update user profile
+// @route PUT /api/users/profile
+//@access PRIVATE
+const updateUserProfile = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id)
+  
+  if(user) {
+    user.name = req.body.name || user.name;
     user.email = req.body.email || user.email;
-    user.billing_phone= req.body.billing_phone || user.billing_phone;
-    user.address_state= req.body.address_state || user.address_state;
-    user.city = req.body.city || user.city;
-    user.pincode = req.body.pincode || user.pincode;
-    user.billing_address = req.body.billing_address || user.billing_address;
-    user.shipping_address = req.body.shipping_address || user.shipping_address;
-    user.password = req.body.password || user.password;
-    
-    const updatedUser = await user.save();
+
+    if(req.body.password) {
+      user.password = req.body.password;
+    }
+
+    const updateUser = await user.save();
 
     res.status(200).json({
-      _id: user._id,
-      firstname: user.firstname,
-      lastname: user.lastname,
-      email: user.email,
-      billing_phone: user.billing_phone,
-      address_state: user.address_state,
-      city: user.city,
-      pincode: user.pincode,
-      billing_address: user.billing_address,
-      shipping_address: user.shipping_address,
-    });
-  } else res.status(404);
-  throw new Error("User not found");
+      _id: updateUser._id,
+      name: updateUser.name,
+      email: updateUser.email,
+      isAdmin: updateUser.isAdmin,
+    })
+
+  } else {
+    res.status(404);
+    throw new Error('User not found')
+  }
+});
+
+// #desc get users
+// @route PUT /api/users
+//@access PRIVATE/Admin
+const getUsers = asyncHandler(async (req, res) => {
+  res.send("get user ");
+});
+
+// #desc get user by ID
+// @route PUT /api/users/:id
+//@access PRIVATE/Admin
+const getUserByID = asyncHandler(async (req, res) => {
+  res.send("get user by id");
+});
+
+// #desc delete users
+// @route DELETE /api/users/:id
+//@access PRIVATE/Admin
+const deleteUser = asyncHandler(async (req, res) => {
+  res.send("delete user ");
+});
+
+// #desc Update user
+// @route PUT /api/users/:id
+//@access PRIVATE/Admin
+const updateUser = asyncHandler(async (req, res) => {
+  res.send("update user ");
 });
 
 export {
@@ -153,5 +159,9 @@ export {
   registerUser,
   logoutUser,
   getUserProfile,
-  UpdateUserProfile,
+  updateUserProfile,
+  getUsers,
+  deleteUser,
+  getUserByID,
+  updateUser,
 };

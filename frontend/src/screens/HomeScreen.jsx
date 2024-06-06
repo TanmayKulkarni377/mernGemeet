@@ -1,9 +1,13 @@
-import Hero from "../components/Hero";
-
+import Slider from "../components/Slider";
+import HomeOffers from "../components/HomeOffers";
+import Usp from "../components/Usp";
 const HomeScreen = () => {
   return (
     <>
-      <Hero />
+      <Slider />
+      <Usp />
+      <HomeOffers />
+     
     </>
   );
 };

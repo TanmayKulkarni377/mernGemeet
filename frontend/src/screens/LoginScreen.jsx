@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Form, Button, Row, Col } from "react-bootstrap";
 import FormContainer from "../components/FormContainer";
 import { useDispatch, useSelector } from "react-redux";
@@ -20,18 +20,23 @@ const LoginScreen = () => {
 
   const { userInfo } = useSelector((state) => state.auth);
 
+
+  const { search } = useLocation();
+  const sp = new URLSearchParams(search);
+  const redirect = sp.get('redirect') || '/';
+
   useEffect(() => {
     if (userInfo) {
-      navigate("/");
+      navigate(redirect);
     }
-  }, [navigate, userInfo]);
+  }, [navigate, redirect, userInfo]);
 
   const submitHandler = async (e) => {
     e.preventDefault();
     try {
       const res = await login({ email, password }).unwrap();
       dispatch(setCredentials({ ...res }));
-      navigate("/");
+      navigate(redirect);
     } catch (err) {
       toast.error(err?.data?.message || err.error);
     }
@@ -64,13 +69,15 @@ const LoginScreen = () => {
 
         {isLoading && <Loader /> }
 
-        <Button type="submit" variant="primary" className="mt-3">
+        <Button type="submit" variant="primary" className="mt-3" 
+        disabled={isLoading}
+        >
           Sign In
         </Button>
 
         <Row className="py-3">
           <Col>
-            New Customer? <Link to="/register">Register</Link>
+            New Customer? <Link to={redirect ? `/register?redirect=${redirect}` : '/register' }>Register</Link>
           </Col>
         </Row>
       </Form>

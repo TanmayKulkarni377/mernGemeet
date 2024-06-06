@@ -2,6 +2,14 @@
     color:red;
 }
 
+.f-16{
+  font-size: 16px;
+}
+
+.text-justify{
+  text-align: justify;
+}
+
 main {
     min-height: 80vh;
   }
@@ -54,4 +62,17 @@ main {
     right: 0;
     bottom: 0;
     background: rgba(0, 0, 0, 0.5);
+  }
+
+  .banner-details{
+    position:absolute;
+    top:36%;
+    left:10%;
+  }
+  swiper-container::part(button-prev),swiper-container::part(button-next) {
+    color: black;
+  }
+  swiper-container::part(bullet-active) {
+    background-color: black;
+  
   }
