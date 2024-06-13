@@ -6,7 +6,6 @@ import {
   Col,
   ListGroup,
   Image,
-  Form,
   Button,
   Card,
 } from "react-bootstrap";
@@ -19,6 +18,7 @@ import {
   useGetOrderDetailsQuery,
   usePayOrderMutation,
   useGetPaypalClientIdQuery,
+  useDeliveredOrderMutation
 } from "../slices/ordersApiSlice";
 
 const OrderScreen = () => {
@@ -39,6 +39,8 @@ const OrderScreen = () => {
   const { userInfo } = useSelector((state) => state.auth);
 
   const [{ isPending }, paypalDispatch] = usePayPalScriptReducer();
+
+  const [deliverOrder, { isLoading: loadingDeliver }] = useDeliveredOrderMutation();
 
   const {
     data: paypal,
@@ -67,7 +69,7 @@ const OrderScreen = () => {
     }
   }, [errorPayPal, loadingPayPal, order, paypal, paypalDispatch]);
 
-  function onApprove(date, actions) { 
+  function onApprove(data, actions) { 
     return actions.order.capture().then(async function (details) { 
       try {
         await payOrder({orderId, details});
@@ -93,14 +95,22 @@ const OrderScreen = () => {
     return actions.order.create({
       purchase_units: [
         {
-          ammount: {
-            value: order.totalPrice,
-          }
-        }
+          amount: { value: order.totalPrice },
+        },
       ]
     }).then((orderId) => {
       return orderId;
     })
+  }
+
+  const deliverOrderHandler = async () => {
+    try {
+      await deliverOrder(orderId);
+      refetch();
+      toast.success('Order delivered');
+    } catch (err) {
+      toast.error(err?.data?.message || err.message);
+    }
   }
 
 
@@ -203,12 +213,12 @@ const OrderScreen = () => {
                     <Loader />
                   ) : (
                     <div>
-                      <Button
+                      {/* <Button
                         onClick={onApproveTest}
                         style={{ marginBottom: "10px" }}
                       >
                         Test Pay Order
-                      </Button>
+                      </Button> */}
                       <div>
                         <PayPalButtons
                         createOrder={ createOrder}
@@ -220,7 +230,18 @@ const OrderScreen = () => {
                   )}
                 </ListGroup.Item>
               )}
-              {/* mark as delivered placeholder */}
+              {/*  delivered  */}
+
+              { loadingDeliver && <Loader/> }
+
+              {userInfo && userInfo.isAdmin && order.isPaid && !order.isDelivered && (
+                <ListGroup.Item>
+                  <Button type="button" className="btn btn-block" onClick={deliverOrderHandler}>
+                    Mark As Delivered
+                  </Button>
+                </ListGroup.Item>
+              ) }
+
             </ListGroup>
           </Card>
         </Col>
